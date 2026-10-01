@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chirp — Roblox Dialogue Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0b0f17; color: #e2e8f0; }
+        .glow-emerald { box-shadow: 0 0 60px -15px rgba(16, 185, 129, 0.2); }
+        .glass-card { background: rgba(26, 34, 50, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-black">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800/80 sticky top-0 bg-[#0b0f17]/80 backdrop-blur-md z-50">
+        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">🐥</span>
+                <span class="font-bold text-xl tracking-tight text-white">Chirp</span>
+                <span class="text-xs bg-emerald-500/10 text-emerald-400 font-mono px-2 py-0.5 rounded-full border border-emerald-500/20">v0.4.0</span>
+            </div>
+            <a href="https://github.com" target="_blank" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">GitHub Repository →</a>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
+        <div class="inline-flex items-center space-x-2 bg-slate-800/60 border border-slate-700/50 px-3 py-1 rounded-full text-xs text-slate-300 mb-6">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Production Ready for Roblox Studio</span>
+        </div>
+        <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight max-w-3xl mx-auto">
+            High-Performance Dialogue & Typewriter Engine
+        </h1>
+        <p class="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mt-6 leading-relaxed">
+            Built for modern Roblox games requiring 60 FPS grapheme rendering, modular animation presets, stacked math effects, and zero network overhead.
+        </p>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="max-w-6xl mx-auto px-6 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="glass-card p-6 rounded-2xl glow-emerald">
+                <div class="text-emerald-400 text-2xl mb-4">⚡</div>
+                <h3 class="text-white font-bold text-lg mb-2">60 FPS Grapheme Engine</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Uses MaxVisibleGraphemes & RenderStepped. Unclosed RichText tags are automatically hidden during reveal without leaking raw XML.</p>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl">
+                <div class="text-emerald-400 text-2xl mb-4">🌀</div>
+                <h3 class="text-white font-bold text-lg mb-2">Stacked Math Effects</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Nest multiple custom inline animation tags simultaneously like <code class="text-emerald-300 font-mono">&lt;shake&gt;</code> and <code class="text-emerald-300 font-mono">&lt;wave&gt;</code> without visual glitches.</p>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl">
+                <div class="text-emerald-400 text-2xl mb-4">🛡️</div>
+                <h3 class="text-white font-bold text-lg mb-2">Zero-Packet Networking</h3>
+                <p class="text-slate-400 text-sm leading-relaxed">Server sends 1 single payload to client. Typing runs completely locally with 0 network bandwidth and memory-safe connection guards.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Preview -->
+    <section class="max-w-4xl mx-auto px-6 py-12">
+        <h2 class="text-2xl font-bold text-white mb-6">Quick Usage Example</h2>
+        <div class="glass-card rounded-2xl p-6 font-mono text-sm overflow-x-auto text-slate-300">
+<pre><code><span class="text-purple-400">local</span> ReplicatedStorage = game:GetService(<span class="text-emerald-300">"ReplicatedStorage"</span>)
+<span class="text-purple-400">local</span> Chirp = require(ReplicatedStorage:WaitForChild(<span class="text-emerald-300">"Chirp"</span>))
+
+<span class="text-purple-400">local</span> dialogue = Chirp.new(label, {
+    Speed = <span class="text-orange-300">0.04</span>,
+    Preset = <span class="text-emerald-300">"Pop"</span>,
+    ShowPrompt = <span class="text-purple-400">true</span>,
+})
+
+dialogue:Type(<span class="text-emerald-300">"yo &lt;font color='#00FF88'&gt;al&lt;/font&gt;! &lt;pause=0.5&gt; welcome to &lt;shake&gt;&lt;wave&gt;chirp engine&lt;/wave&gt;&lt;/shake&gt;."</span>)</code></pre>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800/80 py-8 text-center text-slate-500 text-sm">
+        <p>Created by <span class="text-slate-300 font-semibold">7frostt</span> • Built for Roblox Studio</p>
+    </footer>
+
+</body>
+</html>
