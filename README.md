@@ -20,12 +20,16 @@
 Add Chirp to your `wally.toml`:
 ```toml
 Chirp = "7frostt/chirp@0.1.0"
+```
 
-Manual Installation
-Download Chirp.luau or the .rbxm file from the Releases tab and drop it directly into ReplicatedStorage.
+### Manual Installation
+Download `Chirp.luau` or the `.rbxm` file from the [Releases](https://github.com/7frostt/chirp/releases) tab and drop it directly into `ReplicatedStorage`.
+
+---
 
 ## 🚀 Quick Start
 
+```luau
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Chirp = require(ReplicatedStorage.Chirp)
 
@@ -37,9 +41,12 @@ local dialogue = Chirp.new(label, {
     RandomizePitch = true,
 })
 
--- Types out seamlessly without breaking the red font tag or shaking word.
-dialogue:Type("Hello <font color='#FF0000'>Hey!</font> <pause=0.5> Welcome to <shake>Chirp</shake>.")
+-- Types out seamlessly without breaking the red font tag or shaking word!
+dialogue:Type("Hello <font color='#FF0000'>Bro!</font> <pause=0.5> Welcome to <shake>Chirp</shake>.")
+```
+
+---
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the [MIT License](LICENSE).
