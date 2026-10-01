@@ -2,10 +2,18 @@
 local Parser = {}
 
 export type Token = {
-    Kind: "Text" | "Tag" | "Pause" | "Speed" | "Event",
+    Kind: "Text" | "Tag" | "Pause" | "Speed" | "Event" | "EffectStart" | "EffectEnd",
     Value: string,
-    Data: number?,
+    Data: any?,
 }
+
+local NATIVE_TAGS = { "font", "b", "i", "u", "s", "sc", "stroke" }
+
+local function isNativeTag(tagContent: string): boolean
+    local cleanTag = string.match(tagContent, "^/?([%w]+)")
+    if not cleanTag then return false end
+    return table.find(NATIVE_TAGS, string.lower(cleanTag)) ~= nil
+end
 
 function Parser.parseText(rawText: string): {Token}
     local tokens: {Token} = {}
@@ -38,7 +46,11 @@ function Parser.parseText(rawText: string): {Token}
                 table.insert(tokens, { Kind = "Speed", Value = tagContent, Data = tonumber(speedVal) })
             elseif eventVal then
                 table.insert(tokens, { Kind = "Event", Value = eventVal })
-            else
+            elseif tagContent == "shake" or tagContent == "wave" then
+                table.insert(tokens, { Kind = "EffectStart", Value = tagContent })
+            elseif tagContent == "/shake" or tagContent == "/wave" then
+                table.insert(tokens, { Kind = "EffectEnd", Value = string.sub(tagContent, 2) })
+            elseif isNativeTag(tagContent) then
                 table.insert(tokens, { Kind = "Tag", Value = string.sub(rawText, tagStart, tagEnd) })
             end
 
