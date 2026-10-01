@@ -31,7 +31,7 @@ src/
 ├── Presets/
 │   ├── Classic.luau      -- Instant grapheme reveal
 │   ├── Fade.luau         -- Smooth transparency interpolation
-│   ├── Glitch.luau       -- Cyberpunk character swapping
+│   ├── Glitch.luau       -- Randomized character swapping
 │   └── Pop.luau          -- Spring scale pop reveal
 └── Effects/
     ├── Shake.luau        -- Real-time size offset jitter

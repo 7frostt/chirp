@@ -1,6 +1,6 @@
 --!strict
 --[=[
-    🐥 Chirp v0.4.0
+    Chirp v0.4.0
     A lightweight, tag-aware RichText typewriter & dialogue engine for Roblox.
     Author: 7frostt
 ]=]
@@ -60,7 +60,6 @@ export type ChirpInstance = {
     Destroy: (self: ChirpInstance) -> (),
 }
 
--- Static Security Helper (Feature #3): Sanitizes UGC strings safely
 function Chirp.Sanitize(rawUgcText: string): string
     local sanitized = string.gsub(rawUgcText, "&", "&amp;")
     sanitized = string.gsub(sanitized, "<", "&lt;")
@@ -113,7 +112,6 @@ function Chirp.new(textLabel: TextLabel, options: ChirpOptions?): ChirpInstance
     return (self :: any) :: ChirpInstance
 end
 
--- Memory Leak Cleanup Helper (Feature #5)
 function Chirp:_cleanupConnections()
     if self._renderConn then
         self._renderConn:Disconnect()
@@ -146,7 +144,6 @@ function Chirp:_playSound()
 end
 
 function Chirp:Type(rawText: string, startTime: number?)
-    -- Clean any previous active RenderStepped / prompt connections (Feature #5)
     self:_cleanupConnections()
     self:Stop()
 
@@ -295,7 +292,6 @@ function Chirp:Type(rawText: string, startTime: number?)
     label.Text = parsed.cleanText
     label.MaxVisibleGraphemes = -1
 
-    -- Prompt bounce loop guarded against memory leaks (Feature #5)
     if self._promptGui and not self._stopRequested then
         self._promptGui.Visible = true
         self._promptConn = RunService.RenderStepped:Connect(function()
