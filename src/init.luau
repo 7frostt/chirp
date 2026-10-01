@@ -1,19 +1,22 @@
 --!strict
 --[=[
-    Chirp v0.1.0
+    🐥 Chirp v0.4.0
     A lightweight, tag-aware RichText typewriter & dialogue engine for Roblox.
     Author: 7frostt
 ]=]
 
 local SoundService = game:GetService("SoundService")
+local RunService = game:GetService("RunService")
 
 local Signal = require(script.Signal)
 local Parser = require(script.Parser)
 
-local ClassicPreset = require(script.Presets.Classic)
 local GlitchPreset = require(script.Presets.Glitch)
 local FadePreset = require(script.Presets.Fade)
 local PopPreset = require(script.Presets.Pop)
+
+local ShakeEffect = require(script.Effects.Shake)
+local WaveEffect = require(script.Effects.Wave)
 
 local Chirp = {}
 Chirp.__index = Chirp
@@ -26,6 +29,8 @@ export type ChirpOptions = {
     Sound: Sound?,
     RandomizePitch: boolean?,
     PitchRange: Vector2?,
+    Caret: string?,
+    ShowPrompt: boolean?,
 }
 
 export type ChirpInstance = {
@@ -35,6 +40,8 @@ export type ChirpInstance = {
     Sound: Sound?,
     RandomizePitch: boolean,
     PitchRange: Vector2,
+    Caret: string?,
+    ShowPrompt: boolean,
     
     OnComplete: any,
     OnPause: any,
@@ -43,12 +50,23 @@ export type ChirpInstance = {
     _isTyping: boolean,
     _skipRequested: boolean,
     _stopRequested: boolean,
+    _promptGui: TextLabel?,
+    _renderConn: RBXScriptConnection?,
+    _promptConn: RBXScriptConnection?,
     
-    Type: (self: ChirpInstance, text: string) -> (),
+    Type: (self: ChirpInstance, text: string, startTime: number?) -> (),
     Skip: (self: ChirpInstance) -> (),
     Stop: (self: ChirpInstance) -> (),
     Destroy: (self: ChirpInstance) -> (),
 }
+
+-- Static Security Helper (Feature #3): Sanitizes UGC strings safely
+function Chirp.Sanitize(rawUgcText: string): string
+    local sanitized = string.gsub(rawUgcText, "&", "&amp;")
+    sanitized = string.gsub(sanitized, "<", "&lt;")
+    sanitized = string.gsub(sanitized, ">", "&gt;")
+    return sanitized
+end
 
 function Chirp.new(textLabel: TextLabel, options: ChirpOptions?): ChirpInstance
     assert(textLabel and textLabel:IsA("TextLabel"), "[Chirp]: TextLabel instance expected.")
@@ -59,11 +77,13 @@ function Chirp.new(textLabel: TextLabel, options: ChirpOptions?): ChirpInstance
     local self = setmetatable({}, Chirp)
 
     self.TextLabel = textLabel
-    self.Speed = options.Speed or 0.03
+    self.Speed = options.Speed or 0.04
     self.Preset = options.Preset or "Classic"
     self.Sound = options.Sound
     self.RandomizePitch = if options.RandomizePitch ~= nil then options.RandomizePitch else true
     self.PitchRange = options.PitchRange or Vector2.new(0.95, 1.05)
+    self.Caret = options.Caret or "|"
+    self.ShowPrompt = if options.ShowPrompt ~= nil then options.ShowPrompt else true
 
     self.OnComplete = Signal.new()
     self.OnPause = Signal.new()
@@ -72,8 +92,37 @@ function Chirp.new(textLabel: TextLabel, options: ChirpOptions?): ChirpInstance
     self._isTyping = false
     self._skipRequested = false
     self._stopRequested = false
+    self._renderConn = nil
+    self._promptConn = nil
+
+    if self.ShowPrompt and textLabel.Parent then
+        local prompt = Instance.new("TextLabel")
+        prompt.Name = "ChirpPrompt"
+        prompt.Size = UDim2.new(0, 18, 0, 18)
+        prompt.Position = UDim2.new(1, -22, 1, -22)
+        prompt.BackgroundTransparency = 1
+        prompt.Text = "▼"
+        prompt.TextColor3 = textLabel.TextColor3
+        prompt.TextSize = 14
+        prompt.Font = Enum.Font.BuilderSansBold
+        prompt.Visible = false
+        prompt.Parent = textLabel.Parent
+        self._promptGui = prompt
+    end
 
     return (self :: any) :: ChirpInstance
+end
+
+-- Memory Leak Cleanup Helper (Feature #5)
+function Chirp:_cleanupConnections()
+    if self._renderConn then
+        self._renderConn:Disconnect()
+        self._renderConn = nil
+    end
+    if self._promptConn then
+        self._promptConn:Disconnect()
+        self._promptConn = nil
+    end
 end
 
 function Chirp:_playSound()
@@ -96,73 +145,171 @@ function Chirp:_playSound()
     end)
 end
 
-function Chirp:Type(rawText: string)
-    if self._isTyping then
-        self:Stop()
-        task.wait()
+function Chirp:Type(rawText: string, startTime: number?)
+    -- Clean any previous active RenderStepped / prompt connections (Feature #5)
+    self:_cleanupConnections()
+    self:Stop()
+
+    if self._promptGui then
+        self._promptGui.Visible = false
     end
 
     self._isTyping = true
     self._skipRequested = false
     self._stopRequested = false
 
-    local tokens = Parser.parseText(rawText)
-    local currentSpeed = self.Speed
+    local parsed = Parser.parseText(rawText)
     local label = self.TextLabel
+    local currentSpeed = self.Speed
 
-    label.Text = ""
+    label.Text = parsed.cleanText
+    label.MaxVisibleGraphemes = 0
 
-    local accumulatedText = ""
+    local totalGraphemes = #parsed.graphemes
+    local revealTimestamps: { [number]: number } = {}
 
-    for _, token in ipairs(tokens) do
-        if self._stopRequested then break end
+    -- Multiplayer Cutscene Synchronization (Feature #4)
+    local baseTime = os.clock()
+    local initialElapsed = 0
+    if startTime then
+        local serverNow = workspace:GetServerTimeNow()
+        initialElapsed = math.max(0, serverNow - startTime)
+    end
 
-        if token.Kind == "Tag" then
-            accumulatedText ..= token.Value
-            label.Text = accumulatedText
-        elseif token.Kind == "Pause" then
-            if not self._skipRequested and token.Data then
-                self.OnPause:Fire(token.Data)
-                task.wait(token.Data)
-            end
-        elseif token.Kind == "Speed" then
-            if token.Data then
-                currentSpeed = token.Data
-            end
-        elseif token.Kind == "Event" then
-            self.OnEventTriggered:Fire(token.Value)
-        elseif token.Kind == "Text" then
-            if self._skipRequested then
-                accumulatedText ..= token.Value
-            else
-                self:_playSound()
-                accumulatedText ..= token.Value
-
-                if self.Preset == "Glitch" then
-                    GlitchPreset.apply(label, accumulatedText, currentSpeed)
-                elseif self.Preset == "Fade" then
-                    FadePreset.apply(label, accumulatedText, currentSpeed, token.Value)
-                elseif self.Preset == "Pop" then
-                    PopPreset.apply(label, accumulatedText, currentSpeed, token.Value, label.TextSize)
-                else
-                    ClassicPreset.apply(label, accumulatedText)
-                end
-
-                if currentSpeed > 0 then
-                    task.wait(currentSpeed)
-                end
-            end
+    local currentGrapheme = 0
+    if initialElapsed > 0 and currentSpeed > 0 then
+        currentGrapheme = math.min(totalGraphemes, math.floor(initialElapsed / currentSpeed))
+        for i = 1, currentGrapheme do
+            revealTimestamps[i] = baseTime - (initialElapsed - (i * currentSpeed))
         end
     end
 
-    if self._skipRequested then
-        local fullText = ""
-        for _, token in ipairs(tokens) do
-            if token.Kind == "Text" or token.Kind == "Tag" then
-                fullText ..= token.Value
+    local isCustomAnimated = (self.Preset ~= "Classic") or parsed.hasEffects
+
+    if isCustomAnimated then
+        label.MaxVisibleGraphemes = -1
+        self._renderConn = RunService.RenderStepped:Connect(function()
+            if currentGrapheme == 0 then
+                label.Text = ""
+                return
+            end
+
+            local now = os.clock()
+            local buffer = ""
+
+            for i = 1, currentGrapheme do
+                local node = parsed.graphemes[i]
+                local age = now - (revealTimestamps[i] or now)
+                local char = node.char
+
+                if self.Preset == "Glitch" then
+                    char = GlitchPreset.getChar(char, age, i)
+                end
+
+                local sizeOffset = 0
+                if node.effects["shake"] then
+                    sizeOffset += ShakeEffect.getOffset(i, now)
+                end
+                if node.effects["wave"] then
+                    sizeOffset += WaveEffect.getOffset(i, now)
+                end
+
+                local scale = 1.0
+                if self.Preset == "Pop" then
+                    scale = PopPreset.getScale(age)
+                end
+
+                local targetSize = math.max(1, math.floor((label.TextSize + sizeOffset) * scale))
+                local transparency = 0
+                if self.Preset == "Fade" then
+                    transparency = FadePreset.getTransparency(age)
+                end
+
+                local formatted = node.nativeOpenTags
+                if targetSize ~= label.TextSize or transparency > 0 then
+                    formatted ..= string.format('<font size="%d" transparency="%.2f">%s</font>', targetSize, transparency, char)
+                else
+                    formatted ..= char
+                end
+                formatted ..= node.nativeCloseTags
+
+                buffer ..= formatted
+            end
+
+            if self.Caret and currentGrapheme < totalGraphemes then
+                buffer ..= self.Caret
+            end
+
+            label.Text = buffer
+        end)
+    end
+
+    while currentGrapheme < totalGraphemes do
+        if self._stopRequested then break end
+
+        if self._skipRequested then
+            currentGrapheme = totalGraphemes
+            for i = 1, totalGraphemes do
+                if not revealTimestamps[i] then
+                    revealTimestamps[i] = os.clock()
+                end
+            end
+            if not isCustomAnimated then
+                label.MaxVisibleGraphemes = -1
+            end
+            break
+        end
+
+        currentGrapheme += 1
+        revealTimestamps[currentGrapheme] = os.clock()
+
+        if not isCustomAnimated then
+            label.MaxVisibleGraphemes = currentGrapheme
+        end
+
+        if parsed.commands[currentGrapheme] then
+            for _, cmd in ipairs(parsed.commands[currentGrapheme]) do
+                if cmd.Kind == "Pause" and not self._skipRequested then
+                    self.OnPause:Fire(cmd.Value)
+                    task.wait(cmd.Value)
+                elseif cmd.Kind == "Speed" then
+                    currentSpeed = cmd.Value
+                elseif cmd.Kind == "Event" then
+                    self.OnEventTriggered:Fire(cmd.Value)
+                end
             end
         end
-        label.Text = fullText
+
+        self:_playSound()
+
+        if currentSpeed > 0 and not self._skipRequested then
+            task.wait(currentSpeed)
+        end
+    end
+
+    if self._renderConn then
+        self._renderConn:Disconnect()
+        self._renderConn = nil
+    end
+
+    label.Text = parsed.cleanText
+    label.MaxVisibleGraphemes = -1
+
+    -- Prompt bounce loop guarded against memory leaks (Feature #5)
+    if self._promptGui and not self._stopRequested then
+        self._promptGui.Visible = true
+        self._promptConn = RunService.RenderStepped:Connect(function()
+            if not self._promptGui or not self._promptGui.Visible or self._isTyping then
+                if self._promptConn then
+                    self._promptConn:Disconnect()
+                    self._promptConn = nil
+                end
+                return
+            end
+            local now = os.clock()
+            local bounce = math.sin(now * 8) * 3
+            self._promptGui.Position = UDim2.new(1, -22, 1, -22 + bounce)
+        end)
     end
 
     self._isTyping = false
@@ -179,10 +326,19 @@ end
 function Chirp:Stop()
     self._stopRequested = true
     self._isTyping = false
+    self:_cleanupConnections()
+    if self._promptGui then
+        self._promptGui.Visible = false
+    end
 end
 
 function Chirp:Destroy()
     self:Stop()
+    self:_cleanupConnections()
+    if self._promptGui then
+        self._promptGui:Destroy()
+        self._promptGui = nil
+    end
     self.TextLabel.Text = ""
 end
 
