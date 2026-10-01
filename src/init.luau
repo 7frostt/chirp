@@ -9,7 +9,11 @@ local SoundService = game:GetService("SoundService")
 
 local Signal = require(script.Signal)
 local Parser = require(script.Parser)
+
+local ClassicPreset = require(script.Presets.Classic)
 local GlitchPreset = require(script.Presets.Glitch)
+local FadePreset = require(script.Presets.Fade)
+local PopPreset = require(script.Presets.Pop)
 
 local Chirp = {}
 Chirp.__index = Chirp
@@ -132,13 +136,17 @@ function Chirp:Type(rawText: string)
                 accumulatedText ..= token.Value
             else
                 self:_playSound()
+                accumulatedText ..= token.Value
 
                 if self.Preset == "Glitch" then
                     GlitchPreset.apply(label, accumulatedText, currentSpeed)
+                elseif self.Preset == "Fade" then
+                    FadePreset.apply(label, accumulatedText, currentSpeed, token.Value)
+                elseif self.Preset == "Pop" then
+                    PopPreset.apply(label, accumulatedText, currentSpeed, token.Value, label.TextSize)
+                else
+                    ClassicPreset.apply(label, accumulatedText)
                 end
-
-                accumulatedText ..= token.Value
-                label.Text = accumulatedText
 
                 if currentSpeed > 0 then
                     task.wait(currentSpeed)
