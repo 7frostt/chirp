@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chirp — Roblox Dialogue Engine</title>
+    <title>Chirp — Documentation & API Reference</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -20,82 +20,225 @@
         }
     </script>
     <style>
-        body { background-color: #0b0f17; color: #e2e8f0; }
-        .glow-emerald { box-shadow: 0 0 60px -15px rgba(16, 185, 129, 0.2); }
-        .glass-card { background: rgba(26, 34, 50, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        body { background-color: #09090b; color: #f4f4f5; }
     </style>
 </head>
-<body class="font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-black">
+<body class="font-sans antialiased min-h-screen text-zinc-300 selection:bg-zinc-800 selection:text-white">
 
     <!-- Header -->
-    <header class="border-b border-slate-800/80 sticky top-0 bg-[#0b0f17]/80 backdrop-blur-md z-50">
-        <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <header class="border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <span class="text-2xl">🐥</span>
-                <span class="font-bold text-xl tracking-tight text-white">Chirp</span>
-                <span class="text-xs bg-emerald-500/10 text-emerald-400 font-mono px-2 py-0.5 rounded-full border border-emerald-500/20">v0.4.0</span>
+                <span class="font-bold text-lg text-zinc-100 tracking-tight">Chirp</span>
+                <span class="text-xs bg-zinc-800 text-zinc-300 font-mono px-2 py-0.5 rounded-md border border-zinc-700/50">v0.4.0</span>
             </div>
-            <a href="https://github.com" target="_blank" class="text-sm font-medium text-slate-400 hover:text-white transition-colors">GitHub Repository →</a>
+            <a href="https://github.com/7frostt/chirp" target="_blank" class="text-xs font-mono text-zinc-400 hover:text-zinc-100 transition-colors">GitHub Repo →</a>
         </div>
     </header>
 
-    <!-- Hero -->
-    <section class="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
-        <div class="inline-flex items-center space-x-2 bg-slate-800/60 border border-slate-700/50 px-3 py-1 rounded-full text-xs text-slate-300 mb-6">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Production Ready for Roblox Studio</span>
-        </div>
-        <h1 class="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight max-w-3xl mx-auto">
-            High-Performance Dialogue & Typewriter Engine
-        </h1>
-        <p class="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mt-6 leading-relaxed">
-            Built for modern Roblox games requiring 60 FPS grapheme rendering, modular animation presets, stacked math effects, and zero network overhead.
-        </p>
-    </section>
+    <main class="max-w-4xl mx-auto px-6 py-12 space-y-12">
 
-    <!-- Features Grid -->
-    <section class="max-w-6xl mx-auto px-6 py-12">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="glass-card p-6 rounded-2xl glow-emerald">
-                <div class="text-emerald-400 text-2xl mb-4">⚡</div>
-                <h3 class="text-white font-bold text-lg mb-2">60 FPS Grapheme Engine</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">Uses MaxVisibleGraphemes & RenderStepped. Unclosed RichText tags are automatically hidden during reveal without leaking raw XML.</p>
+        <!-- Hero Section -->
+        <section class="space-y-3">
+            <h1 class="text-3xl sm:text-4xl font-bold text-zinc-100 tracking-tight">
+                Chirp API Documentation
+            </h1>
+            <p class="text-zinc-400 text-sm sm:text-base leading-relaxed max-w-2xl">
+                High-performance, tag-aware RichText typewriter & dialogue engine for Roblox. Built for frame-perfect grapheme rendering, multi-effect tag stacking, and zero network overhead.
+            </p>
+        </section>
+
+        <hr class="border-zinc-800/80" />
+
+        <!-- Quick Start -->
+        <section class="space-y-4">
+            <h2 class="text-lg font-semibold text-zinc-100">Quick Setup</h2>
+            <div class="bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 font-mono text-xs overflow-x-auto text-zinc-300 leading-relaxed">
+<pre><code><span class="text-zinc-500">-- Initialize Chirp instance</span>
+<span class="text-purple-400">local</span> ReplicatedStorage = game:GetService(<span class="text-emerald-400">"ReplicatedStorage"</span>)
+<span class="text-purple-400">local</span> Chirp = <span class="text-amber-300">require</span>(ReplicatedStorage.Chirp)
+
+<span class="text-purple-400">local</span> dialogue = Chirp.new(labelInstance, { Speed = <span class="text-emerald-400">0.04</span>, Preset = <span class="text-emerald-400">"Pop"</span> })
+
+<span class="text-zinc-500">-- Type dialogue line</span>
+dialogue:Type(<span class="text-emerald-400">"yo &lt;font color='#00FF88'&gt;al&lt;/font&gt;! &lt;pause=0.5&gt; welcome to &lt;shake&gt;&lt;wave&gt;chirp&lt;/wave&gt;&lt;/shake&gt;."</span>)</code></pre>
+            </div>
+        </section>
+
+        <!-- API Reference -->
+        <section class="space-y-8">
+            <h2 class="text-lg font-semibold text-zinc-100">API Reference</h2>
+
+            <!-- Constructor -->
+            <div class="space-y-2">
+                <div class="font-mono text-sm text-emerald-400 font-semibold">Chirp.new(textLabel: TextLabel, options: ChirpOptions?): ChirpInstance</div>
+                <p class="text-xs text-zinc-400">Creates a new Chirp typewriter instance bound to a target <code class="text-zinc-200 font-mono">TextLabel</code>.</p>
             </div>
 
-            <div class="glass-card p-6 rounded-2xl">
-                <div class="text-emerald-400 text-2xl mb-4">🌀</div>
-                <h3 class="text-white font-bold text-lg mb-2">Stacked Math Effects</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">Nest multiple custom inline animation tags simultaneously like <code class="text-emerald-300 font-mono">&lt;shake&gt;</code> and <code class="text-emerald-300 font-mono">&lt;wave&gt;</code> without visual glitches.</p>
+            <!-- Methods -->
+            <div class="space-y-4">
+                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-800 pb-2">Instance Methods</h3>
+                
+                <div class="grid gap-3">
+                    <div class="bg-zinc-900/30 border border-zinc-800/80 p-3.5 rounded-lg space-y-1">
+                        <div class="font-mono text-xs text-zinc-100 font-medium">:Type(rawText: string, startTime: number?)</div>
+                        <p class="text-xs text-zinc-400">Parses and types out a dialogue string. Pass <code class="text-zinc-200 font-mono">workspace:GetServerTimeNow()</code> to <code class="text-zinc-200 font-mono">startTime</code> for synchronized multiplayer cutscenes.</p>
+                    </div>
+
+                    <div class="bg-zinc-900/30 border border-zinc-800/80 p-3.5 rounded-lg space-y-1">
+                        <div class="font-mono text-xs text-zinc-100 font-medium">:Skip()</div>
+                        <p class="text-xs text-zinc-400">Instantly completes character reveal for the current line while keeping active loop animations running.</p>
+                    </div>
+
+                    <div class="bg-zinc-900/30 border border-zinc-800/80 p-3.5 rounded-lg space-y-1">
+                        <div class="font-mono text-xs text-zinc-100 font-medium">:Stop()</div>
+                        <p class="text-xs text-zinc-400">Halts active typing immediately, hides continuation prompt, and disconnects render loops.</p>
+                    </div>
+
+                    <div class="bg-zinc-900/30 border border-zinc-800/80 p-3.5 rounded-lg space-y-1">
+                        <div class="font-mono text-xs text-zinc-100 font-medium">:Destroy()</div>
+                        <p class="text-xs text-zinc-400">Unbinds all connections, destroys prompt elements, and cleans up instance memory safely.</p>
+                    </div>
+
+                    <div class="bg-zinc-900/30 border border-zinc-800/80 p-3.5 rounded-lg space-y-1">
+                        <div class="font-mono text-xs text-zinc-100 font-medium">Chirp.Sanitize(rawUgcText: string): string <span class="text-zinc-500 font-normal">(Static)</span></div>
+                        <p class="text-xs text-zinc-400">Sanitizes user-generated string input (<code class="text-zinc-200 font-mono">&lt;</code>, <code class="text-zinc-200 font-mono">&gt;</code>, <code class="text-zinc-200 font-mono">&amp;</code>) to prevent RichText XML injection.</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="glass-card p-6 rounded-2xl">
-                <div class="text-emerald-400 text-2xl mb-4">🛡️</div>
-                <h3 class="text-white font-bold text-lg mb-2">Zero-Packet Networking</h3>
-                <p class="text-slate-400 text-sm leading-relaxed">Server sends 1 single payload to client. Typing runs completely locally with 0 network bandwidth and memory-safe connection guards.</p>
+            <!-- Signals -->
+            <div class="space-y-4">
+                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-800 pb-2">Signals (Events)</h3>
+                
+                <div class="grid gap-2.5 font-mono text-xs">
+                    <div class="bg-zinc-900/30 border border-zinc-800/80 p-3 rounded-lg flex justify-between items-center">
+                        <span class="text-zinc-200">OnComplete</span>
+                        <span class="text-zinc-500 font-sans text-xs">Fires when line typing finishes</span>
+                    </div>
+                    <div class="bg-zinc-900/30 border border-zinc-800/80 p-3 rounded-lg flex justify-between items-center">
+                        <span class="text-zinc-200">OnPause:Connect(duration)</span>
+                        <span class="text-zinc-500 font-sans text-xs">Fires when reaching &lt;pause=X&gt; tag</span>
+                    </div>
+                    <div class="bg-zinc-900/30 border border-zinc-800/80 p-3 rounded-lg flex justify-between items-center">
+                        <span class="text-zinc-200">OnEventTriggered:Connect(name)</span>
+                        <span class="text-zinc-500 font-sans text-xs">Fires when reaching &lt;event=X&gt; tag</span>
+                    </div>
+                </div>
             </div>
-        </div>
-    </section>
 
-    <!-- Code Preview -->
-    <section class="max-w-4xl mx-auto px-6 py-12">
-        <h2 class="text-2xl font-bold text-white mb-6">Quick Usage Example</h2>
-        <div class="glass-card rounded-2xl p-6 font-mono text-sm overflow-x-auto text-slate-300">
-<pre><code><span class="text-purple-400">local</span> ReplicatedStorage = game:GetService(<span class="text-emerald-300">"ReplicatedStorage"</span>)
-<span class="text-purple-400">local</span> Chirp = require(ReplicatedStorage:WaitForChild(<span class="text-emerald-300">"Chirp"</span>))
+            <!-- Configuration Options -->
+            <div class="space-y-4">
+                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-800 pb-2">Options (ChirpOptions)</h3>
+                
+                <div class="overflow-x-auto border border-zinc-800/80 rounded-lg">
+                    <table class="w-full text-left text-xs text-zinc-300 font-mono">
+                        <thead class="bg-zinc-900/80 text-zinc-400 uppercase text-[10px]">
+                            <tr>
+                                <th class="p-3 border-b border-zinc-800">Property</th>
+                                <th class="p-3 border-b border-zinc-800">Type</th>
+                                <th class="p-3 border-b border-zinc-800">Default</th>
+                                <th class="p-3 border-b border-zinc-800 font-sans">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800/60">
+                            <tr>
+                                <td class="p-3 text-emerald-400">Speed</td>
+                                <td class="p-3 text-zinc-500">number</td>
+                                <td class="p-3 text-zinc-400">0.04</td>
+                                <td class="p-3 font-sans text-zinc-400">Delay per grapheme in seconds.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-emerald-400">Preset</td>
+                                <td class="p-3 text-zinc-500">string</td>
+                                <td class="p-3 text-zinc-400">"Classic"</td>
+                                <td class="p-3 font-sans text-zinc-400">Reveal style: "Classic", "Glitch", "Fade", or "Pop".</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-emerald-400">Sound</td>
+                                <td class="p-3 text-zinc-500">Sound?</td>
+                                <td class="p-3 text-zinc-400">nil</td>
+                                <td class="p-3 font-sans text-zinc-400">Sound instance played per character reveal.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-emerald-400">RandomizePitch</td>
+                                <td class="p-3 text-zinc-500">boolean</td>
+                                <td class="p-3 text-zinc-400">true</td>
+                                <td class="p-3 font-sans text-zinc-400">Enables random pitch shifting on sound play.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-emerald-400">PitchRange</td>
+                                <td class="p-3 text-zinc-500">Vector2</td>
+                                <td class="p-3 text-zinc-400">(0.95, 1.05)</td>
+                                <td class="p-3 font-sans text-zinc-400">Min/max pitch playback scale.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-emerald-400">Caret</td>
+                                <td class="p-3 text-zinc-500">string?</td>
+                                <td class="p-3 text-zinc-400">"|"</td>
+                                <td class="p-3 font-sans text-zinc-400">Inline cursor character shown while typing.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-emerald-400">ShowPrompt</td>
+                                <td class="p-3 text-zinc-500">boolean</td>
+                                <td class="p-3 text-zinc-400">true</td>
+                                <td class="p-3 font-sans text-zinc-400">Auto-spawns bouncing ▼ prompt on line completion.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-<span class="text-purple-400">local</span> dialogue = Chirp.new(label, {
-    Speed = <span class="text-orange-300">0.04</span>,
-    Preset = <span class="text-emerald-300">"Pop"</span>,
-    ShowPrompt = <span class="text-purple-400">true</span>,
-})
+            <!-- Tags & Commands -->
+            <div class="space-y-4">
+                <h3 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider border-b border-zinc-800 pb-2">Custom Tags & Commands</h3>
+                
+                <div class="overflow-x-auto border border-zinc-800/80 rounded-lg">
+                    <table class="w-full text-left text-xs text-zinc-300 font-mono">
+                        <thead class="bg-zinc-900/80 text-zinc-400 uppercase text-[10px]">
+                            <tr>
+                                <th class="p-3 border-b border-zinc-800">Tag Syntax</th>
+                                <th class="p-3 border-b border-zinc-800">Type</th>
+                                <th class="p-3 border-b border-zinc-800 font-sans">Behavior</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800/60">
+                            <tr>
+                                <td class="p-3 text-amber-300">&lt;shake&gt;...&lt;/shake&gt;</td>
+                                <td class="p-3 text-zinc-500">Effect</td>
+                                <td class="p-3 font-sans text-zinc-400">Applies real-time character size jitter.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-amber-300">&lt;wave&gt;...&lt;/wave&gt;</td>
+                                <td class="p-3 text-zinc-500">Effect</td>
+                                <td class="p-3 font-sans text-zinc-400">Animates text in a smooth sine wave.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-amber-300">&lt;pause=X&gt;</td>
+                                <td class="p-3 text-zinc-500">Command</td>
+                                <td class="p-3 font-sans text-zinc-400">Halts typewriter execution for X seconds.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-amber-300">&lt;speed=X&gt;</td>
+                                <td class="p-3 text-zinc-500">Command</td>
+                                <td class="p-3 font-sans text-zinc-400">Overrides typewriter character delay to X.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-3 text-amber-300">&lt;event=X&gt;</td>
+                                <td class="p-3 text-zinc-500">Command</td>
+                                <td class="p-3 font-sans text-zinc-400">Triggers OnEventTriggered signal with payload X.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-dialogue:Type(<span class="text-emerald-300">"yo &lt;font color='#00FF88'&gt;al&lt;/font&gt;! &lt;pause=0.5&gt; welcome to &lt;shake&gt;&lt;wave&gt;chirp engine&lt;/wave&gt;&lt;/shake&gt;."</span>)</code></pre>
-        </div>
-    </section>
+        </section>
 
-    <!-- Footer -->
-    <footer class="border-t border-slate-800/80 py-8 text-center text-slate-500 text-sm">
-        <p>Created by <span class="text-slate-300 font-semibold">7frostt</span> • Built for Roblox Studio</p>
+    </main>
+
+    <footer class="border-t border-zinc-800/80 py-8 text-center text-zinc-500 text-xs font-mono">
+        Chirp Engine v0.4.0 • Maintained by 7frostt
     </footer>
 
 </body>
