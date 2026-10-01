@@ -1,0 +1,11 @@
+{
+  "name": "Chirp",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Chirp": {
+        "$path": "src"
+      }
+    }
+  }
+}
