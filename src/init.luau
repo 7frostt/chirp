@@ -21,6 +21,9 @@ local WaveEffect = require(script.Effects.Wave)
 local Chirp = {}
 Chirp.__index = Chirp
 
+type CustomEffectFn = (index: number, time: number) -> (number, number)
+Chirp.RegisteredEffects = {} :: { [string]: CustomEffectFn }
+
 export type PresetType = "Classic" | "Glitch" | "Fade" | "Pop"
 
 export type ChirpOptions = {
@@ -58,7 +61,12 @@ export type ChirpInstance = {
     Skip: (self: ChirpInstance) -> (),
     Stop: (self: ChirpInstance) -> (),
     Destroy: (self: ChirpInstance) -> (),
-}
+
+function Chirp.RegisterEffect(effectName: string, callback: CustomEffectFn)
+    assert(type(effectName) == "string", "[Chirp]: Effect name must be a string.")
+    assert(type(callback) == "function", "[Chirp]: Callback must be a function.")
+    Chirp.RegisteredEffects[string.lower(effectName)] = callback
+end
 
 function Chirp.Sanitize(rawUgcText: string): string
     local sanitized = string.gsub(rawUgcText, "&", "&amp;")
@@ -165,7 +173,6 @@ function Chirp:Type(rawText: string, startTime: number?)
     local totalGraphemes = #parsed.graphemes
     local revealTimestamps: { [number]: number } = {}
 
-    -- Multiplayer Cutscene Synchronization (Feature #4)
     local baseTime = os.clock()
     local initialElapsed = 0
     if startTime then
@@ -185,6 +192,9 @@ function Chirp:Type(rawText: string, startTime: number?)
 
     if isCustomAnimated then
         label.MaxVisibleGraphemes = -1
+
+        local charBuffer = table.create(totalGraphemes + 1)
+
         self._renderConn = RunService.RenderStepped:Connect(function()
             if currentGrapheme == 0 then
                 label.Text = ""
@@ -192,7 +202,7 @@ function Chirp:Type(rawText: string, startTime: number?)
             end
 
             local now = os.clock()
-            local buffer = ""
+            table.clear(charBuffer)
 
             for i = 1, currentGrapheme do
                 local node = parsed.graphemes[i]
@@ -204,11 +214,25 @@ function Chirp:Type(rawText: string, startTime: number?)
                 end
 
                 local sizeOffset = 0
+                local extraTransparency = 0
+
                 if node.effects["shake"] then
                     sizeOffset += ShakeEffect.getOffset(i, now)
                 end
                 if node.effects["wave"] then
-                    sizeOffset += WaveEffect.getOffset(i, now)
+                    local waveSize, waveTrans = WaveEffect.getOffset(i, now)
+                    sizeOffset += waveSize
+                    extraTransparency += waveTrans
+                end
+
+                -- Process registered custom effects
+                for effectTag, _ in pairs(node.effects) do
+                    local customFn = Chirp.RegisteredEffects[effectTag]
+                    if customFn then
+                        local cSize, cTrans = customFn(i, now)
+                        sizeOffset += (cSize or 0)
+                        extraTransparency += (cTrans or 0)
+                    end
                 end
 
                 local scale = 1.0
@@ -217,10 +241,7 @@ function Chirp:Type(rawText: string, startTime: number?)
                 end
 
                 local targetSize = math.max(1, math.floor((label.TextSize + sizeOffset) * scale))
-                local transparency = 0
-                if self.Preset == "Fade" then
-                    transparency = FadePreset.getTransparency(age)
-                end
+                local transparency = math.clamp((self.Preset == "Fade" and FadePreset.getTransparency(age) or 0) + extraTransparency, 0, 1)
 
                 local formatted = node.nativeOpenTags
                 if targetSize ~= label.TextSize or transparency > 0 then
@@ -230,14 +251,14 @@ function Chirp:Type(rawText: string, startTime: number?)
                 end
                 formatted ..= node.nativeCloseTags
 
-                buffer ..= formatted
+                table.insert(charBuffer, formatted)
             end
 
             if self.Caret and currentGrapheme < totalGraphemes then
-                buffer ..= self.Caret
+                table.insert(charBuffer, self.Caret)
             end
 
-            label.Text = buffer
+            label.Text = table.concat(charBuffer)
         end)
     end
 
