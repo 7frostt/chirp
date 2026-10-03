@@ -45,22 +45,25 @@ export type ChirpInstance = {
     PitchRange: Vector2,
     Caret: string?,
     ShowPrompt: boolean,
-    
+
     OnComplete: any,
     OnPause: any,
     OnEventTriggered: any,
-    
+
     _isTyping: boolean,
     _skipRequested: boolean,
     _stopRequested: boolean,
     _promptGui: TextLabel?,
     _renderConn: RBXScriptConnection?,
     _promptConn: RBXScriptConnection?,
-    
+
     Type: (self: ChirpInstance, text: string, startTime: number?) -> (),
     Skip: (self: ChirpInstance) -> (),
     Stop: (self: ChirpInstance) -> (),
     Destroy: (self: ChirpInstance) -> (),
+}
+
+function Chirp.RegisterEffect(effectName: string, callback: CustomEffectFn)
 
 function Chirp.RegisterEffect(effectName: string, callback: CustomEffectFn)
     assert(type(effectName) == "string", "[Chirp]: Effect name must be a string.")
