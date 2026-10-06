@@ -30,7 +30,7 @@
         <div class="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <span class="font-bold text-lg text-zinc-100 tracking-tight">Chirp</span>
-                <span class="text-xs bg-zinc-800 text-zinc-300 font-mono px-2 py-0.5 rounded-md border border-zinc-700/50">v0.4.1</span>
+                <span class="text-xs bg-zinc-800 text-zinc-300 font-mono px-2 py-0.5 rounded-md border border-zinc-700/50">v0.4.2</span>
             </div>
             <a href="https://github.com/7frostt/chirp" target="_blank" class="text-xs font-mono text-zinc-400 hover:text-zinc-100 transition-colors">GitHub Repository →</a>
         </div>
@@ -58,12 +58,12 @@
 <span class="text-purple-400">local</span> ReplicatedStorage = game:GetService(<span class="text-emerald-400">"ReplicatedStorage"</span>)
 <span class="text-purple-400">local</span> Chirp = <span class="text-amber-300">require</span>(ReplicatedStorage.Chirp)
 
-<span class="text-zinc-500">-- Register custom inline tag effect</span>
+<span class="text-zinc-500">-- Register custom inline tag effect (size, transparency, color)</span>
 Chirp.RegisterEffect(<span class="text-emerald-400">"pulse"</span>, <span class="text-purple-400">function</span>(index, time)
-    <span class="text-purple-400">return</span> math.sin(time * <span class="text-emerald-400">8</span>) * <span class="text-emerald-400">3</span>, <span class="text-emerald-400">0</span>
+    <span class="text-purple-400">return</span> <span class="text-emerald-400">0</span>, (math.sin(time * <span class="text-emerald-400">6</span>) + <span class="text-emerald-400">1</span>) * <span class="text-emerald-400">0.2</span>, <span class="text-emerald-400">"#00FFFF"</span>
 <span class="text-purple-400">end</span>)
 
-<span class="text-purple-400">local</span> dialogue = Chirp.new(labelInstance, { Speed = <span class="text-emerald-400">0.04</span>, Preset = <span class="text-emerald-400">"Pop"</span> })
+<span class="text-purple-400">local</span> dialogue = Chirp.new(labelInstance, { Speed = <span class="text-emerald-400">0.04</span>, Preset = <span class="text-emerald-400">"Elastic"</span> })
 
 <span class="text-zinc-500">-- Type dialogue line</span>
 dialogue:Type(<span class="text-emerald-400">"yo &lt;font color='#00FF88'&gt;al&lt;/font&gt;! &lt;pause=0.5&gt; welcome to &lt;wave&gt;&lt;pulse&gt;chirp&lt;/pulse&gt;&lt;/wave&gt;."</span>)</code></pre>
@@ -106,8 +106,8 @@ dialogue:Type(<span class="text-emerald-400">"yo &lt;font color='#00FF88'&gt;al&
                     </div>
 
                     <div class="bg-zinc-900/30 border border-zinc-800/80 p-3.5 rounded-lg space-y-1">
-                        <div class="font-mono text-xs text-zinc-100 font-medium">Chirp.RegisterEffect(name: string, callback: (index, time) -> (size, trans)) <span class="text-zinc-500 font-normal">(Static)</span></div>
-                        <p class="text-xs text-zinc-400">Registers a custom inline effect tag at runtime. The callback receives index & time and returns size and transparency offsets.</p>
+                        <div class="font-mono text-xs text-zinc-100 font-medium">Chirp.RegisterEffect(name: string, callback: (index, time) -> (size?, trans?, colorHex?)) <span class="text-zinc-500 font-normal">(Static)</span></div>
+                        <p class="text-xs text-zinc-400">Registers a custom inline effect tag at runtime. Callback receives grapheme index & time, and returns size offset, transparency offset, and optional hex color string.</p>
                     </div>
 
                     <div class="bg-zinc-900/30 border border-zinc-800/80 p-3.5 rounded-lg space-y-1">
@@ -162,7 +162,7 @@ dialogue:Type(<span class="text-emerald-400">"yo &lt;font color='#00FF88'&gt;al&
                                 <td class="p-3 text-emerald-400">Preset</td>
                                 <td class="p-3 text-zinc-500">string</td>
                                 <td class="p-3 text-zinc-400">"Classic"</td>
-                                <td class="p-3 font-sans text-zinc-400">Reveal style: "Classic", "Glitch", "Fade", or "Pop".</td>
+                                <td class="p-3 font-sans text-zinc-400">Reveal style: "Classic", "Glitch", "Fade", "Pop", "Drop", "Elastic", or "Neon".</td>
                             </tr>
                             <tr>
                                 <td class="p-3 text-emerald-400">Sound</td>
@@ -253,7 +253,7 @@ dialogue:Type(<span class="text-emerald-400">"yo &lt;font color='#00FF88'&gt;al&
     </main>
 
     <footer class="border-t border-zinc-800/80 py-8 text-center text-zinc-500 text-xs font-mono">
-        Chirp Engine v0.4.0 • Maintained by 7frostt
+        Chirp Engine v0.4.2 • Maintained by 7frostt
     </footer>
 
 </body>
