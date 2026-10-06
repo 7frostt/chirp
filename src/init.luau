@@ -1,6 +1,6 @@
 --!strict
 --[=[
-    Chirp v0.4.1
+    Chirp v0.4.2
     A lightweight, tag-aware RichText typewriter & dialogue engine for Roblox.
     Author: 7frostt
 ]=]
@@ -14,6 +14,9 @@ local Parser = require(script.Parser)
 local GlitchPreset = require(script.Presets.Glitch)
 local FadePreset = require(script.Presets.Fade)
 local PopPreset = require(script.Presets.Pop)
+local DropPreset = require(script.Presets.Drop)
+local ElasticPreset = require(script.Presets.Elastic)
+local NeonPreset = require(script.Presets.Neon)
 
 local ShakeEffect = require(script.Effects.Shake)
 local WaveEffect = require(script.Effects.Wave)
@@ -24,7 +27,7 @@ Chirp.__index = Chirp
 type CustomEffectFn = (index: number, time: number) -> (number?, number?, string?)
 Chirp.RegisteredEffects = {} :: { [string]: CustomEffectFn }
 
-export type PresetType = "Classic" | "Glitch" | "Fade" | "Pop"
+export type PresetType = "Classic" | "Glitch" | "Fade" | "Pop" | "Drop" | "Elastic" | "Neon"
 
 export type ChirpOptions = {
     Speed: number?,
@@ -164,7 +167,6 @@ function Chirp:Type(rawText: string, startTime: number?)
     self._skipRequested = false
     self._stopRequested = false
 
-    -- pass RegisteredEffects to parser so custom tags (<spooky>, <pulse>) are stripped from native rich text tags
     local parsed = Parser.parseText(rawText, Chirp.RegisteredEffects)
     local label = self.TextLabel
     local currentSpeed = self.Speed
@@ -208,30 +210,46 @@ function Chirp:Type(rawText: string, startTime: number?)
 
             for i = 1, currentGrapheme do
                 local node = parsed.graphemes[i]
-                -- clamp fade age so characters stay visible post-typing
                 local revealTime = revealTimestamps[i] or now
                 local rawAge = now - revealTime
                 local fadeAge = math.min(0.5, rawAge)
                 local char = node.char
 
-                if self.Preset == "Glitch" then
-                    char = GlitchPreset.getChar(char, rawAge, i)
-                end
-
+                local scale = 1.0
                 local sizeOffset = 0
                 local extraTransparency = 0
                 local currentColorOverride: string? = nil
 
+                -- preset transformations
+if self.Preset == "Glitch" then
+    char = GlitchPreset.getChar(char, rawAge, i)
+elseif self.Preset == "Pop" then
+    scale = PopPreset.getScale(rawAge)
+elseif self.Preset == "Elastic" then
+    scale = ElasticPreset.getScale(rawAge)
+elseif self.Preset == "Drop" then
+    local dSize, dTrans = DropPreset.getOffset(rawAge)
+    sizeOffset += dSize
+    extraTransparency += dTrans
+elseif self.Preset == "Neon" then
+    local nTrans, nColor = NeonPreset.getOffsetAndColor(rawAge, i)
+    extraTransparency += nTrans
+    if nColor then
+        currentColorOverride = nColor
+    end
+end
+
+                -- Built-in effects
                 if node.effects["shake"] then
                     sizeOffset += ShakeEffect.getOffset(i, now)
                 end
                 if node.effects["wave"] then
-    local waveSize, waveTrans = WaveEffect.getOffset(i, now)
-    sizeOffset += waveSize
-    extraTransparency += waveTrans
-end
+                    local waveSize, waveTrans = WaveEffect.getOffset(i, now)
+                    sizeOffset += waveSize
+                    extraTransparency += waveTrans
+                end
 
-                -- evaluate custom registered effects with lowercase key matching
+                -- Custom registered effects
                 for effectTag, _ in pairs(node.effects) do
                     local customFn = Chirp.RegisteredEffects[string.lower(effectTag)]
                     if customFn then
@@ -244,13 +262,9 @@ end
                     end
                 end
 
-                local scale = 1.0
-                if self.Preset == "Pop" then
-                    scale = PopPreset.getScale(rawAge)
-                end
-
                 local targetSize = math.max(1, math.floor((label.TextSize + sizeOffset) * scale))
-                local transparency = math.clamp((self.Preset == "Fade" and FadePreset.getTransparency(fadeAge) or 0) + extraTransparency, 0, 1)
+                local baseTrans = if self.Preset == "Fade" then FadePreset.getTransparency(fadeAge) else 0
+                local transparency = math.clamp(baseTrans + extraTransparency, 0, 1)
 
                 local formatted = node.nativeOpenTags
                 if currentColorOverride then
@@ -322,16 +336,14 @@ end
         end
     end
 
-    -- disconnect static renders, but keep render loop active for custom animated effects so color cycling continues
-    -- keeps render loop active for animated lines (<wave>, <spooky>, pop, glitch, etc.)
-if not isCustomAnimated then
-    if self._renderConn then
-        self._renderConn:Disconnect()
-        self._renderConn = nil
+    if not isCustomAnimated then
+        if self._renderConn then
+            self._renderConn:Disconnect()
+            self._renderConn = nil
+        end
+        label.Text = parsed.cleanText
+        label.MaxVisibleGraphemes = -1
     end
-    label.Text = parsed.cleanText
-    label.MaxVisibleGraphemes = -1
-end
 
     if self._promptGui and not self._stopRequested then
         self._promptGui.Visible = true
